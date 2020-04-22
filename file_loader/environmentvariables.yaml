@@ -1,0 +1,9 @@
+---
+GOOGLE_CLOUD_PROJECT: grpdata-user-dataandanalytics
+ARCHIVE_BUCKET: dna-external-ingestion-archive
+ERROR_BUCKET: dna-external-ingestion-errors
+FILE_METADATA_TABLE: file_meta
+FILE_LOG_TABLE: file_load_register
+CONFIG_DATASTORE_PROJECT: grpdata-omd-dev-meta
+CONFIG_KIND: file_ingest_cf_config
+LOGGING_KIND: file_ingest_log

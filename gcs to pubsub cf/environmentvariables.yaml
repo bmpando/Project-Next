@@ -1,0 +1,11 @@
+---
+GOOGLE_CLOUD_PROJECT: grpdata-prod-dataandanalytics
+ARCHIVE_BUCKET: grpdata-prod-dataandanalytics-files_archive
+ERROR_BUCKET: grpdata-prod-dataandanalytics-files_errors
+PUBSUB_TOPIC: gcs-to-bigquery-queue
+FILE_METADATA_TABLE: file_meta
+CHATROOM_URL: https://chat.googleapis.com/v1/spaces/AAAANv1rj7w/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=MV6nZjEQQx_4XQV5QhBpOpER1m1DT0JJlO43nkO8nKc%3D
+FILE_LOG_TABLE: file_load_register
+CONFIG_DATASTORE_PROJECT: grpdata-omd-dev-meta
+CONFIG_KIND: file_ingest_cf_config
+LOGGING_KIND: file_ingest_log

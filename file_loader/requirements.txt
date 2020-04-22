@@ -1,0 +1,7 @@
+google-cloud-firestore
+google-cloud-datastore
+google-cloud-pubsub
+google-cloud-storage
+google-cloud-bigquery
+google-cloud-core
+pytz
