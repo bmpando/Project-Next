@@ -3,7 +3,9 @@
     <words>
       <w>bigquery</w>
       <w>dataandanalytics</w>
+      <w>dataset</w>
       <w>grpdata</w>
+      <w>pubsub</w>
     </words>
   </dictionary>
 </component>

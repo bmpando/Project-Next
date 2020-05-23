@@ -4,9 +4,10 @@ from google.cloud import datastore
 import logging
 import time
 import traceback
+import base64
+import json
 from datetime import datetime
 from google.cloud.bigquery import retry as bq_retry
-from json import dumps
 from modules.DatastoreHelper import DatastoreHelper
 from modules.GCSHelper import GCSHelper
 from modules.NotificationsHelper import NotificationsHelper
@@ -14,7 +15,10 @@ from modules.NotificationsHelper import NotificationsHelper
 """main function called from the cloud function"""
 
 
-def main_loader(data, context):
+def main_loader(event, context):
+    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    data = json.loads(pubsub_message)
+    logging.info(data)
     """get required environment variables"""
     logging.debug('initializing environment variables..')
     project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
@@ -92,7 +96,7 @@ def main_loader(data, context):
                                         allow_quoted_newlines=row["allow_quoted_newlines"])
 
                 if row["multiple_tables"]:
-                    sleep_index = (int(my_event_id) % 100)/100
+                    sleep_index = (int(my_event_id) % 10)
                     time.sleep(sleep_index)
                     tab_index = (int(my_event_id) % 10)
                     tab_index = str(tab_index)
@@ -152,14 +156,18 @@ def load_staging_table(project_id, file_name, st_table_name, table_name, dataset
                  """""" + file_name + """'"""" _m_file_name , " + event_id + " _m_run_id FROM `" \
                  + project_id + "." + dataset_id + "." + file_meta_table + "`)"""
     logging.info('Insert SQL ' + insert_sql)
-    query_job = client2.query(
-        insert_sql,
-        location=location,
-        job_config=insert_job_config,
-        retry=bq_retry.DEFAULT_RETRY
-    )
-    query_job.result()  # Waits for the query to finish
-    logging.debug('finished staging')
+    try:
+        query_job = client2.query(
+            insert_sql,
+            location=location,
+            job_config=insert_job_config,
+            retry=bq_retry.DEFAULT_RETRY.with_deadline(60)
+        )
+        query_job.result()  # Waits for the query to finish
+        logging.debug('finished staging')
+    except Exception as e:
+        logging.error(e)
+        # return retry_job(query, query_params, attempt_nb)
 
 
 def load_csv_file(bucket_name, file_name, table_name, template_name, dataset_id, temp_dataset_id,
@@ -292,7 +300,7 @@ def insert_datastore_log(event_id, file_name, file_crc32c, load_status, load_dat
                'file_name': file_name,
                'load_start_date': load_date,
                'load_status': load_status}
-    json_data = dumps(dataobj)
+    json_data = json.dumps(dataobj)
     logging.info(json_data)
     logging.info('logging_kind' + logging_kind)
     DatastoreHelper(project=config_ds_project,
@@ -312,11 +320,20 @@ def get_table_schema(dataset_id, table_id):
 
 
 def handle_error(bucket_name, file_name, error_bucket, event_id, error_folder, project_id, message):
-    new_name = file_name  #+ str(event_id)
+    new_name = file_name  # + str(event_id)
     chat_url = os.getenv('CHATROOM_URL')
-    GCSHelper(file_name, bucket_name, error_bucket, new_name, error_folder).move_file()
+    # GCSHelper(file_name, bucket_name, error_bucket, new_name, error_folder).move_file()
     if len(chat_url) > 1:
         NotificationsHelper(chat_url, event_id, project_id, file_name, error_bucket,
                             error_folder=error_folder, message=message).notify_chatroom()
     else:
         logging.info('invoked retry for ' + file_name)
+
+
+def retry_job(query, query_params, attempt_nb):
+    if attempt_nb < 3:
+        print(' ! New BigQuery error. Retrying in 10s')
+        time.sleep(10)
+        # return run_job(query, query_params, attempt_nb + 1)
+    else:
+        raise Exception('BigQuery error. Failed 3 times', query)
