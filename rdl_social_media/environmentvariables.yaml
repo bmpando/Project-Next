@@ -1,0 +1,6 @@
+---
+GOOGLE_CLOUD_PROJECT: rdl-socialmedia-prod
+PUBSUB_TOPIC: rdl-tp-twitter
+STAGING_TABLE: rdl_sm_twitter
+STAGING_DATASET: raw
+STAGING_ERRORS: rdl_streaming_errors
